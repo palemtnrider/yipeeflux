@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: yipeeed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yipee-backend
+  namespace: yipeeed
+spec:
+  selector:
+    yipee.io/yipee-backend: generated
+  ports:
+  - port: 5000
+    targetPort: 5000
+    name: backend-5000
+    protocol: TCP
+    nodePort: 32006
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yipee-ui
+  namespace: yipeeed
+spec:
+  selector:
+    yipee.io/yipee-ui: generated
+  ports:
+  - port: 8080
+    targetPort: 80
+    name: yipee-ui-8080
+    protocol: TCP
+    nodePort: 32081
+  type: NodePort
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: yipee-ui
+  namespace: yipeeed
+spec:
+  selector:
+    matchLabels:
+      name: yipee
+      component: yipee-ui
+      yipee.io/yipee-ui: generated
+  rollbackTo:
+    revision: 0
+  template:
+    spec:
+      imagePullSecrets: []
+      containers:
+      - name: yipee-ui
+        image: yipeeio/ui:2.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      restartPolicy: Always
+    metadata:
+      labels:
+        name: yipee
+        component: yipee-ui
+        yipee.io/yipee-ui: generated
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  replicas: 1
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: yipee-backend
+  namespace: yipeeed
+spec:
+  selector:
+    matchLabels:
+      name: yipee
+      component: yipee-backend
+      yipee.io/yipee-backend: generated
+  rollbackTo:
+    revision: 0
+  template:
+    spec:
+      imagePullSecrets: []
+      containers:
+      - name: yipee-api
+        # env:
+        #   - name: YIPEE_INSTALL_TYPE
+        #     value: static
+        image: yipeeio/api:2.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+      - name: yipee-converter
+        image: yipeeio/converter:2.1
+        imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+    metadata:
+      labels:
+        name: yipee
+        component: yipee-backend
+        yipee.io/yipee-backend: generated
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  replicas: 1
