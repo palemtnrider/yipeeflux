@@ -99,7 +99,7 @@ spec:
         - containerPort: 5000
           protocol: TCP
       - name: yipee-converter
-        image: yipeeio/converter:2.1
+        image: yipeeio/converter:2.0
         imagePullPolicy: IfNotPresent
       restartPolicy: Always
     metadata:
